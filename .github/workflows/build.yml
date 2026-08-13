@@ -23,19 +23,21 @@ jobs:
 
       - name: Build all packages
         run: |
+          export PATH="/opt/devkitpro/pacman/bin:$PATH"
           mkdir -p repo
           for dir in */ ; do
             pkg="${dir%/}"
             [ -f "$pkg/PKGBUILD" ] || continue
             echo "::group::Building $pkg"
             chown -R builder:builder "$pkg"
-            su builder -c "cd '$pkg' && makepkg -s --noconfirm --skippgpcheck"
+            su builder -c "export PATH='/opt/devkitpro/pacman/bin:$PATH' && cd '$pkg' && makepkg -s --noconfirm --skippgpcheck"
             find "$pkg" -maxdepth 1 -name '*.pkg.tar.*' -exec mv {} repo/ \;
             echo "::endgroup::"
           done
 
       - name: Generate pacman database
         run: |
+          export PATH="/opt/devkitpro/pacman/bin:$PATH"
           cd repo
           repo-add 3ds-packages.db.tar.gz *.pkg.tar.*
 
