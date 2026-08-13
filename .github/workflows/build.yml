@@ -27,6 +27,7 @@ jobs:
       - name: Build all packages
         run: |
           export PATH="/opt/devkitpro/pacman/bin:$PATH"
+          chown -R builder:builder /opt/devkitpro/portlibs
           mkdir -p repo
           for dir in */ ; do
             pkg="${dir%/}"
