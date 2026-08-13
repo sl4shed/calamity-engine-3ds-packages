@@ -1,0 +1,77 @@
+pkgname="3ds-freetype"
+pkgver=2.14.3
+pkgrel=1
+pkgdesc="TrueType font rendering library (mingw-w64)"
+arch=('any')
+url="https://www.freetype.org/"
+license=(GPL2+ custom:FreeType)
+depends=("3ds-bzip2"
+	"3ds-libpng"
+	"3ds-zlib")
+sha256sums=('36bc4f1cc413335368ee656c42afca65c5a3987e8768cc28cf11ba775e785a5f')
+makedepends=('3ds-pkg-config' 'dkp-toolchain-vars')
+options=('!strip' '!libtool' 'staticlibs')
+source=(https://downloads.sourceforge.net/sourceforge/freetype/freetype-${pkgver}.tar.xz)
+groups=('3ds-portlibs')
+
+prepare() {
+	source /opt/devkitpro/3dsvars.sh
+
+	cmake -B build -S "freetype-${pkgver}" \
+		-DCMAKE_TOOLCHAIN_FILE="$DEVKITPRO/cmake/3DS.cmake" \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="${PORTLIBS_PREFIX}" \
+		-DFT_REQUIRE_ZLIB=ON \
+		-DFT_REQUIRE_BZIP2=ON \
+		-DFT_DISABLE_HARFBUZZ=ON \
+		-DFT_REQUIRE_PNG=ON \
+		-DBUILD_SHARED_LIBS=OFF
+}
+
+build() {
+	source /opt/devkitpro/3dsvars.sh
+
+	cmake --build build --config Release
+
+	#   cd freetype-${pkgver}
+
+	#   ./configure \
+	#     --enable-freetype-config \
+	#     --host=arm-none-eabi \
+	#     --target=arm-none-eabi \
+	#     --prefix=${PORTLIBS_PREFIX} \
+	#     --enable-static \
+	#     --disable-shared \
+	#     --with-zlib \
+	#     --with-bzip2 \
+	#     --without-harfbuzz \
+	#     --with-png
+
+	#   make
+}
+
+package() {
+	source /opt/devkitpro/3dsvars.sh
+
+	DESTDIR="${pkgdir}" cmake --install build
+
+	cfg="${pkgdir}${PORTLIBS_PREFIX}/lib/cmake/freetype/freetype-config.cmake"
+
+	sed -i '1i\
+include(CMakeFindDependencyMacro)\n\
+find_dependency(ZLIB)\n\
+find_dependency(BZip2)\n\
+find_dependency(PNG)\n' "$cfg"
+
+	#sed -i 's/\$show_static/yes/' \
+	#	"${pkgdir}${PORTLIBS_PREFIX}/bin/freetype-config"
+
+	install -Dm644 "freetype-${pkgver}/LICENSE.TXT" \
+		"${pkgdir}${PORTLIBS_PREFIX}/licenses/${pkgname}/LICENSE.TXT"
+
+	install -Dm644 "freetype-${pkgver}/docs/GPLv2.TXT" \
+		"${pkgdir}${PORTLIBS_PREFIX}/licenses/${pkgname}/GPLv2.TXT"
+
+	install -Dm644 "freetype-${pkgver}/docs/FTL.TXT" \
+		"${pkgdir}${PORTLIBS_PREFIX}/licenses/${pkgname}/FTL.TXT"
+}

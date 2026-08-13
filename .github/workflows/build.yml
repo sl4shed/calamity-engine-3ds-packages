@@ -1,0 +1,59 @@
+name: Build package repo
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+      options: --user root
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create build user
+        run: |
+          useradd -m builder
+          chown -R builder:builder "$GITHUB_WORKSPACE"
+
+      - name: Build all packages
+        run: |
+          mkdir -p repo
+          for dir in */ ; do
+            pkg="${dir%/}"
+            [ -f "$pkg/PKGBUILD" ] || continue
+            echo "::group::Building $pkg"
+            chown -R builder:builder "$pkg"
+            su builder -c "cd '$pkg' && makepkg -s --noconfirm --skippgpcheck"
+            find "$pkg" -maxdepth 1 -name '*.pkg.tar.*' -exec mv {} repo/ \;
+            echo "::endgroup::"
+          done
+
+      - name: Generate pacman database
+        run: |
+          cd repo
+          repo-add 3ds-packages.db.tar.gz *.pkg.tar.*
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: repo
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,50 @@
+pkgname=3ds-fmt
+pkgver=12.1.0
+pkgrel=1
+pkgdesc="Open-source formatting library for C++"
+arch=('any')
+url="https://fmt.dev/"
+license=('MIT')
+depends=()
+makedepends=('dkp-toolchain-vars' '3ds-pkg-config')
+provides=()
+conflicts=()
+options=('!strip' 'staticlibs')
+groups=('3ds-portlibs')
+source=("https://github.com/fmtlib/fmt/archive/refs/tags/12.1.0.zip"
+        "fmt-3ds.patch")
+sha256sums=("e6a2b43c6ec4779fb53b15b705f7c20b4eb9d5ae35784d610ac6daec30737019"
+            "75aa63ff07bcb7dcf4275033c13f16a7a01d4024f3ff61b27b20f03dd233f200")
+
+prepare() {
+    cd "fmt-$pkgver"
+    patch -p1 < ../fmt-3ds.patch
+
+    # patch fmt.pc.in
+    # sed -i 's/@CMAKE_INSTALL_PREFIX@/${PSPDEV}\/psp/' ./support/cmake/fmt.pc.in
+}
+
+build() {
+    source $DEVKITPRO/devkitarm.sh
+    source $DEVKITPRO/3dsvars.sh
+
+	arm-none-eabi-cmake -S fmt-$pkgver -B build \
+        -DCMAKE_TOOLCHAIN_FILE="${DEVKITPRO}/cmake/3DS.cmake" \
+		-DBUILD_SHARED_LIBS=OFF \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX="${PORTLIBS_PREFIX}" \
+        -DFMT_DOC=OFF \
+        -DFMT_TEST=OFF \
+        -DFMT_FUZZ=OFF \
+        -DFMT_OS=OFF \
+		-Wno-dev
+	arm-none-eabi-cmake --build build
+}
+
+package() {
+    source $DEVKITPRO/devkitarm.sh
+    source $DEVKITPRO/3dsvars.sh
+
+	DESTDIR="$pkgdir" cmake --install build
+	install -Dm644 -t "$pkgdir${PORTLIBS_PREFIX}/share/licenses/${pkgname}" fmt-$pkgver/LICENSE
+}
