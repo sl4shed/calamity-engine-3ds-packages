@@ -21,6 +21,9 @@ jobs:
           useradd -m builder
           chown -R builder:builder "$GITHUB_WORKSPACE"
 
+      - name: Install build essentials
+        run: apt-get update && apt-get install -y fakeroot
+
       - name: Build all packages
         run: |
           export PATH="/opt/devkitpro/pacman/bin:$PATH"
