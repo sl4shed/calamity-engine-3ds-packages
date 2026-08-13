@@ -22,7 +22,7 @@ jobs:
           chown -R builder:builder "$GITHUB_WORKSPACE"
 
       - name: Install build essentials
-        run: apt-get update && apt-get install -y fakeroot
+        run: apt-get update && apt-get install -y fakeroot zstd
 
       - name: Build all packages
         run: |
