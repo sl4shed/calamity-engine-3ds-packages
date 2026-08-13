@@ -45,7 +45,7 @@ jobs:
         run: |
           export PATH="/opt/devkitpro/pacman/bin:$PATH"
           cd repo
-          repo-add 3ds-packages.db.tar.gz *.pkg.tar.*
+          repo-add calamity-engine-3ds-packages.db.tar.gz *.pkg.tar.*
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

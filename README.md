@@ -6,7 +6,12 @@ To use it, add it to your pacman/dkp-pacman configuration file:
 
 ```ini
 
-[calamity-3ds-packages]
+[calamity-engine-3ds-packages]
 SigLevel = Optional TrustAll
-Server = https://calamity.sl4shed.xyz/3ds/
+Server = https://sl4shed.github.io/calamity-engine-3ds-packages
+```
+
+Then, run this command:
+```bash
+sudo pacman -Syy
 ```
